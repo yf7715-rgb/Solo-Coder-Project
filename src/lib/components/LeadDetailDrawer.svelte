@@ -53,9 +53,10 @@
 
 	<div class="fixed inset-0 z-50 flex">
 		<div
-			class="fixed inset-0 bg-black bg-opacity-50 transition-opacity"
+			class="fixed inset-0 bg-black/50 transition-opacity"
 			onclick={onClose}
-		/>
+			role="presentation"
+		></div>
 
 		<div class="relative ml-auto flex h-full w-full max-w-2xl flex-col overflow-y-auto bg-white shadow-xl">
 			<div class="flex items-center justify-between border-b border-gray-200 p-6">
