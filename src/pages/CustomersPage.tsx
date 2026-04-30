@@ -108,11 +108,12 @@ export function CustomersPage() {
   };
 
   const saveCurrentView = () => {
-    if (!viewName().trim()) return;
+    const currentViewName = viewName().trim();
+    if (!currentViewName) return;
     
     const newView: FilterView = {
       id: `view-${Date.now()}`,
-      name: viewName(),
+      name: currentViewName,
       filters: { ...filters() },
       createdAt: new Date().toISOString().split('T')[0]
     };
@@ -127,7 +128,7 @@ export function CustomersPage() {
       const auditRecord = generateAuditRecord(
         'filter_save',
         { id: user()!.id, name: user()!.name, role: user()!.role },
-        `保存了客户筛选视图: ${viewName()}`
+        `保存了客户筛选视图: ${currentViewName}`
       );
       addAuditLog(auditRecord);
     }

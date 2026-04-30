@@ -23,12 +23,12 @@ export function PoliciesPage() {
     
     const newPolicy: QuotaPolicy = {
       id: `policy-${Date.now().toString().slice(-6)}`,
-      plan: policyData.plan || 'free',
-      name: policyData.name || '新策略',
-      apiCallThreshold: policyData.apiCallThreshold || 1000,
-      errorRateThreshold: policyData.errorRateThreshold || 5,
-      responseTimeThreshold: policyData.responseTimeThreshold || 500,
-      overageStrategy: policyData.overageStrategy || 'notify',
+      plan: policyData.plan ?? 'free',
+      name: policyData.name ?? '新策略',
+      apiCallThreshold: policyData.apiCallThreshold ?? 1000,
+      errorRateThreshold: policyData.errorRateThreshold ?? 5,
+      responseTimeThreshold: policyData.responseTimeThreshold ?? 500,
+      overageStrategy: policyData.overageStrategy ?? 'notify',
       enabled: policyData.enabled !== undefined ? policyData.enabled : true,
       createdAt: new Date().toISOString().split('T')[0],
       updatedAt: new Date().toISOString().split('T')[0]
@@ -307,8 +307,11 @@ function PolicyForm(props: {
             <label class="block text-sm font-medium text-gray-700 mb-1">调用量阈值</label>
             <input
               type="number"
-              value={formData().apiCallThreshold || 1000}
-              onInput={(e) => updateField('apiCallThreshold', parseInt(e.target.value) || 0)}
+              value={formData().apiCallThreshold ?? 1000}
+              onInput={(e) => {
+                const val = parseInt(e.target.value);
+                updateField('apiCallThreshold', isNaN(val) ? 0 : val);
+              }}
               class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
               min="0"
             />
@@ -317,8 +320,11 @@ function PolicyForm(props: {
             <label class="block text-sm font-medium text-gray-700 mb-1">错误率阈值 (%)</label>
             <input
               type="number"
-              value={formData().errorRateThreshold || 5}
-              onInput={(e) => updateField('errorRateThreshold', parseFloat(e.target.value) || 0)}
+              value={formData().errorRateThreshold ?? 5}
+              onInput={(e) => {
+                const val = parseFloat(e.target.value);
+                updateField('errorRateThreshold', isNaN(val) ? 0 : val);
+              }}
               class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
               min="0"
               max="100"
@@ -329,8 +335,11 @@ function PolicyForm(props: {
             <label class="block text-sm font-medium text-gray-700 mb-1">响应时长阈值 (ms)</label>
             <input
               type="number"
-              value={formData().responseTimeThreshold || 500}
-              onInput={(e) => updateField('responseTimeThreshold', parseInt(e.target.value) || 0)}
+              value={formData().responseTimeThreshold ?? 500}
+              onInput={(e) => {
+                const val = parseInt(e.target.value);
+                updateField('responseTimeThreshold', isNaN(val) ? 0 : val);
+              }}
               class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
               min="0"
             />
@@ -338,7 +347,7 @@ function PolicyForm(props: {
           <div>
             <label class="block text-sm font-medium text-gray-700 mb-1">超额策略</label>
             <select
-              value={formData().overageStrategy || 'notify'}
+              value={formData().overageStrategy ?? 'notify'}
               onChange={(e) => updateField('overageStrategy', e.target.value)}
               class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
             >

@@ -6,9 +6,11 @@ import {
   filterAlerts, generateAuditRecord, addAuditLog
 } from '../utils';
 import {
-  ALERT_TYPES, ALERT_SEVERITIES, ALERT_STATUS
+  ALERT_TYPES, ALERT_SEVERITIES, ALERT_STATUS, UI_TEXTS
 } from '../config/constants';
 import type { Alert, AlertStatus as AlertStatusType } from '../types';
+
+const T = UI_TEXTS;
 
 function getDefaultFilters() {
   return {
@@ -113,42 +115,42 @@ export function AlertsPage() {
     <div class="space-y-6">
       <div class="flex items-center justify-between">
         <div>
-          <h1 class="text-2xl font-bold text-gray-800">告警中心</h1>
-          <p class="text-gray-500 mt-1">管理和处理平台告警</p>
+          <h1 class="text-2xl font-bold text-gray-800">{T.pages.alerts.title}</h1>
+          <p class="text-gray-500 mt-1">{T.pages.alerts.description}</p>
         </div>
         <div class="text-sm text-gray-500">
-          共 {stats().total} 条告警，{stats().open} 条待处理
+          {T.pages.alerts.statusPrefix.total} {stats().total} {T.pages.alerts.statusPrefix.open} {stats().open} {T.pages.alerts.statusPrefix.pending}
         </div>
       </div>
 
       <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
         <StatCard
-          label="待处理"
+          label={T.pages.alerts.stats.open}
           value={stats().open}
           color="red"
         />
         <StatCard
-          label="已认领"
+          label={T.pages.alerts.stats.acknowledged}
           value={stats().acknowledged}
           color="yellow"
         />
         <StatCard
-          label="处理中"
+          label={T.pages.alerts.stats.inProgress}
           value={stats().inProgress}
           color="blue"
         />
         <StatCard
-          label="已关闭"
+          label={T.pages.alerts.stats.closed}
           value={stats().closed}
           color="green"
         />
         <StatCard
-          label="严重告警"
+          label={T.pages.alerts.stats.critical}
           value={stats().critical}
           color="red"
         />
         <StatCard
-          label="总告警"
+          label={T.pages.alerts.stats.total}
           value={stats().total}
           color="gray"
         />
@@ -156,19 +158,19 @@ export function AlertsPage() {
 
       <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
         <div class="flex items-center justify-between mb-4">
-          <h3 class="text-sm font-medium text-gray-700">筛选条件</h3>
+          <h3 class="text-sm font-medium text-gray-700">{T.common.filterConditions}</h3>
           <Show when={hasActiveFilters()}>
             <button
               onClick={clearFilters}
               class="text-sm text-gray-500 hover:text-gray-700"
             >
-              清除筛选
+              {T.common.clearFilters}
             </button>
           </Show>
         </div>
         <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
           <div>
-            <label class="block text-xs text-gray-500 mb-1">告警类型</label>
+            <label class="block text-xs text-gray-500 mb-1">{T.pages.alerts.filter.alertType}</label>
             <select
               value={filters().type}
               onChange={(e) => handleFilterChange('type', e.target.value)}
@@ -181,7 +183,7 @@ export function AlertsPage() {
             </select>
           </div>
           <div>
-            <label class="block text-xs text-gray-500 mb-1">严重程度</label>
+            <label class="block text-xs text-gray-500 mb-1">{T.pages.alerts.filter.severity}</label>
             <select
               value={filters().severity}
               onChange={(e) => handleFilterChange('severity', e.target.value)}
@@ -194,7 +196,7 @@ export function AlertsPage() {
             </select>
           </div>
           <div>
-            <label class="block text-xs text-gray-500 mb-1">状态</label>
+            <label class="block text-xs text-gray-500 mb-1">{T.pages.alerts.filter.status}</label>
             <select
               value={filters().status}
               onChange={(e) => handleFilterChange('status', e.target.value)}
@@ -215,12 +217,12 @@ export function AlertsPage() {
             <table class="w-full">
               <thead class="bg-gray-50 border-b border-gray-200">
                 <tr>
-                  <th class="text-left py-3 px-4 text-xs font-medium text-gray-500 uppercase">严重程度</th>
-                  <th class="text-left py-3 px-4 text-xs font-medium text-gray-500 uppercase">标题</th>
-                  <th class="text-left py-3 px-4 text-xs font-medium text-gray-500 uppercase">客户</th>
-                  <th class="text-left py-3 px-4 text-xs font-medium text-gray-500 uppercase">类型</th>
-                  <th class="text-left py-3 px-4 text-xs font-medium text-gray-500 uppercase">状态</th>
-                  <th class="text-left py-3 px-4 text-xs font-medium text-gray-500 uppercase">创建时间</th>
+                  <th class="text-left py-3 px-4 text-xs font-medium text-gray-500 uppercase">{T.pages.alerts.table.severity}</th>
+                  <th class="text-left py-3 px-4 text-xs font-medium text-gray-500 uppercase">{T.pages.alerts.table.title}</th>
+                  <th class="text-left py-3 px-4 text-xs font-medium text-gray-500 uppercase">{T.pages.alerts.table.customer}</th>
+                  <th class="text-left py-3 px-4 text-xs font-medium text-gray-500 uppercase">{T.pages.alerts.table.type}</th>
+                  <th class="text-left py-3 px-4 text-xs font-medium text-gray-500 uppercase">{T.pages.alerts.table.status}</th>
+                  <th class="text-left py-3 px-4 text-xs font-medium text-gray-500 uppercase">{T.pages.alerts.table.createdAt}</th>
                 </tr>
               </thead>
               <tbody class="divide-y divide-gray-100">
@@ -275,7 +277,7 @@ export function AlertsPage() {
               <svg class="w-12 h-12 mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" />
               </svg>
-              <p>点击左侧告警查看详情</p>
+              <p>{T.pages.alerts.actions.clickToView}</p>
             </div>
           }>
             <div class="space-y-4">
@@ -297,7 +299,7 @@ export function AlertsPage() {
 
               <div class="space-y-3">
                 <div class="flex justify-between text-sm">
-                  <span class="text-gray-500">客户</span>
+                  <span class="text-gray-500">{T.pages.alerts.detail.customer}</span>
                   <A
                     href={`/customers/${selectedAlert()!.customerId}`}
                     class="text-blue-600 hover:text-blue-700"
@@ -306,30 +308,30 @@ export function AlertsPage() {
                   </A>
                 </div>
                 <div class="flex justify-between text-sm">
-                  <span class="text-gray-500">告警类型</span>
+                  <span class="text-gray-500">{T.pages.alerts.detail.alertType}</span>
                   <span class="text-gray-800">{ALERT_TYPES[selectedAlert()!.type].label}</span>
                 </div>
                 <div class="flex justify-between text-sm">
-                  <span class="text-gray-500">当前值</span>
+                  <span class="text-gray-500">{T.pages.alerts.detail.currentValue}</span>
                   <span class="text-red-600 font-medium">{selectedAlert()!.currentValue}</span>
                 </div>
                 <div class="flex justify-between text-sm">
-                  <span class="text-gray-500">阈值</span>
+                  <span class="text-gray-500">{T.pages.alerts.detail.threshold}</span>
                   <span class="text-gray-800">{selectedAlert()!.threshold}</span>
                 </div>
                 <div class="flex justify-between text-sm">
-                  <span class="text-gray-500">创建时间</span>
+                  <span class="text-gray-500">{T.pages.alerts.detail.createdAt}</span>
                   <span class="text-gray-800">{selectedAlert()!.createdAt}</span>
                 </div>
                 <Show when={selectedAlert()!.acknowledgedBy}>
                   <div class="flex justify-between text-sm">
-                    <span class="text-gray-500">认领人</span>
+                    <span class="text-gray-500">{T.pages.alerts.detail.acknowledgedBy}</span>
                     <span class="text-gray-800">{selectedAlert()!.acknowledgedBy}</span>
                   </div>
                 </Show>
                 <Show when={selectedAlert()!.closedBy}>
                   <div class="flex justify-between text-sm">
-                    <span class="text-gray-500">关闭人</span>
+                    <span class="text-gray-500">{T.pages.alerts.detail.closedBy}</span>
                     <span class="text-gray-800">{selectedAlert()!.closedBy}</span>
                   </div>
                 </Show>
@@ -337,14 +339,14 @@ export function AlertsPage() {
 
               <Show when={canPerformAction('manage') && selectedAlert()!.status !== 'closed'}>
                 <div class="pt-4 border-t border-gray-200">
-                  <p class="text-sm text-gray-500 mb-3">操作</p>
+                  <p class="text-sm text-gray-500 mb-3">{T.columns.operations}</p>
                   <div class="space-y-2">
                     <Show when={selectedAlert()!.status === 'open'}>
                       <button
                         onClick={() => updateAlertStatus(selectedAlert()!.id, 'acknowledged')}
                         class="w-full px-4 py-2 bg-yellow-500 text-white rounded-lg hover:bg-yellow-600 transition-colors text-sm"
                       >
-                        认领告警
+                        {T.pages.alerts.actions.acknowledge}
                       </button>
                     </Show>
                     <Show when={selectedAlert()!.status === 'open' || selectedAlert()!.status === 'acknowledged'}>
@@ -352,7 +354,7 @@ export function AlertsPage() {
                         onClick={() => updateAlertStatus(selectedAlert()!.id, 'in_progress')}
                         class="w-full px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors text-sm"
                       >
-                        标记处理中
+                        {T.pages.alerts.actions.inProgress}
                       </button>
                     </Show>
                     <Show when={selectedAlert()!.status !== 'closed'}>
@@ -360,7 +362,7 @@ export function AlertsPage() {
                         onClick={() => updateAlertStatus(selectedAlert()!.id, 'closed')}
                         class="w-full px-4 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 transition-colors text-sm"
                       >
-                        关闭告警
+                        {T.pages.alerts.actions.close}
                       </button>
                     </Show>
                     <Show when={selectedAlert()!.status !== 'closed' && selectedAlert()!.status !== 'escalated'}>
@@ -368,7 +370,7 @@ export function AlertsPage() {
                         onClick={() => updateAlertStatus(selectedAlert()!.id, 'escalated')}
                         class="w-full px-4 py-2 bg-purple-500 text-white rounded-lg hover:bg-purple-600 transition-colors text-sm"
                       >
-                        升级告警
+                        {T.pages.alerts.actions.escalate}
                       </button>
                     </Show>
                   </div>
