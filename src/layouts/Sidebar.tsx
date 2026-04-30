@@ -1,0 +1,86 @@
+import { A, useLocation } from '@solidjs/router';
+import { useAuth } from '../contexts/AuthContext';
+import { MENU_ITEMS } from '../config/constants';
+
+export function Sidebar() {
+  const location = useLocation();
+  const { user } = useAuth();
+
+  const currentRole = user()?.role;
+
+  const filteredMenuItems = MENU_ITEMS.filter(item => 
+    currentRole ? item.roles.includes(currentRole) : false
+  );
+
+  return (
+    <aside class="w-64 bg-slate-800 text-white flex flex-col min-h-screen">
+      <div class="p-4 border-b border-slate-700">
+        <div class="flex items-center gap-3">
+          <div class="w-10 h-10 bg-blue-600 rounded-lg flex items-center justify-center">
+            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+            </svg>
+          </div>
+          <div>
+            <h1 class="font-bold text-lg">用量运营平台</h1>
+            <p class="text-xs text-slate-400">Usage Operations</p>
+          </div>
+        </div>
+      </div>
+
+      <nav class="flex-1 p-4 space-y-1">
+        {filteredMenuItems.map(item => {
+          const isActive = location.pathname === item.path || 
+            (item.path !== '/' && location.pathname.startsWith(item.path));
+          
+          return (
+            <A
+              href={item.path}
+              class={`flex items-center gap-3 px-4 py-3 rounded-lg transition-colors ${
+                isActive 
+                  ? 'bg-blue-600 text-white' 
+                  : 'text-slate-300 hover:bg-slate-700 hover:text-white'
+              }`}
+            >
+              <Icon name={item.icon} />
+              <span>{item.label}</span>
+            </A>
+          );
+        })}
+      </nav>
+
+      <div class="p-4 border-t border-slate-700">
+        {user() && (
+          <div class="flex items-center gap-3">
+            <div class="w-10 h-10 bg-blue-500 rounded-full flex items-center justify-center font-bold">
+              {user()!.name.charAt(0)}
+            </div>
+            <div class="flex-1 min-w-0">
+              <p class="font-medium truncate">{user()!.name}</p>
+              <p class="text-xs text-slate-400">
+                {user()!.role === 'admin' ? '管理员' : user()!.role === 'ops' ? '运维' : '只读'}
+              </p>
+            </div>
+          </div>
+        )}
+      </div>
+    </aside>
+  );
+}
+
+function Icon(props: { name: string }) {
+  const icons: Record<string, string> = {
+    dashboard: 'M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6',
+    'bar-chart': 'M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z',
+    users: 'M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z',
+    bell: 'M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9',
+    settings: 'M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z M15 12a3 3 0 11-6 0 3 3 0 016 0z',
+    history: 'M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z'
+  };
+
+  return (
+    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d={icons[props.name] || icons.dashboard} />
+    </svg>
+  );
+}
