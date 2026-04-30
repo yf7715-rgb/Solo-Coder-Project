@@ -21,6 +21,34 @@ export const USERS = [
   { id: 'user-003', username: 'viewer', name: '王查看', role: 'viewer' as Role, password: 'viewer123' }
 ];
 
+export const ROUTE_ROLES: Record<string, Role[]> = {
+  '/': ['admin', 'ops', 'viewer'],
+  '/usage': ['admin', 'ops', 'viewer'],
+  '/customers': ['admin', 'ops', 'viewer'],
+  '/customers/:id': ['admin', 'ops', 'viewer'],
+  '/alerts': ['admin', 'ops', 'viewer'],
+  '/policies': ['admin', 'ops'],
+  '/audit-log': ['admin', 'ops']
+};
+
+export function canAccessRoute(path: string, role: Role): boolean {
+  const allowedRoles = ROUTE_ROLES[path];
+  if (allowedRoles) {
+    return allowedRoles.includes(role);
+  }
+
+  for (const [pattern, roles] of Object.entries(ROUTE_ROLES)) {
+    if (pattern.includes(':')) {
+      const regex = new RegExp('^' + pattern.replace(/:[^/]+/g, '[^/]+') + '$');
+      if (regex.test(path)) {
+        return roles.includes(role);
+      }
+    }
+  }
+
+  return true;
+}
+
 export const PLANS: Record<Plan, { label: string; color: string }> = {
   free: { label: '免费版', color: 'bg-gray-100 text-gray-700' },
   pro: { label: '专业版', color: 'bg-blue-100 text-blue-700' },

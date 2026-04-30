@@ -19,7 +19,7 @@ function getInitialUser(): User | null {
 interface AuthContextType {
   user: () => User | null;
   isAuthenticated: () => boolean;
-  login: (username: string, password: string) => { success: boolean; message: string };
+  login: (username: string, password: string) => { success: boolean; message: string; user?: User };
   logout: () => void;
   hasPermission: (permission: string) => boolean;
   canPerformAction: (action: 'view' | 'edit' | 'manage' | 'delete') => boolean;
@@ -32,7 +32,7 @@ export const AuthProvider: ParentComponent = (props) => {
 
   const isAuthenticated = () => !!user();
 
-  const login = (username: string, password: string): { success: boolean; message: string } => {
+  const login = (username: string, password: string): { success: boolean; message: string; user?: User } => {
     const foundUser = USERS.find(u => u.username === username && u.password === password);
     
     if (!foundUser) {
@@ -56,7 +56,7 @@ export const AuthProvider: ParentComponent = (props) => {
     );
     addAuditLog(auditRecord);
     
-    return { success: true, message: '登录成功' };
+    return { success: true, message: '登录成功', user: newUser };
   };
 
   const logout = () => {
