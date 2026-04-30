@@ -1,17 +1,16 @@
 import { createSignal, createMemo, For, Show } from 'solid-js';
 import { customers, usageTrends } from '../data/mockData';
-import { 
+import {
   filterCustomers, filterUsageTrends, aggregateMetrics, aggregateByPlan,
   formatNumber, formatPercentage, getDateRange
 } from '../utils';
-import { 
-  PLANS, RISK_LEVELS, CUSTOMER_TYPES, REGIONS 
+import {
+  PLANS, RISK_LEVELS, CUSTOMER_TYPES, REGIONS
 } from '../config/constants';
 
-export function UsagePage() {
+function getDefaultFilters() {
   const dateRange = getDateRange(30);
-  
-  const [filters, setFilters] = createSignal({
+  return {
     startDate: dateRange.start,
     endDate: dateRange.end,
     customerType: '',
@@ -19,7 +18,11 @@ export function UsagePage() {
     region: '',
     workspace: '',
     riskLevel: ''
-  });
+  };
+}
+
+export function UsagePage() {
+  const [filters, setFilters] = createSignal(getDefaultFilters());
 
   const filteredCustomers = createMemo(() => {
     return filterCustomers(customers(), {
@@ -66,7 +69,7 @@ export function UsagePage() {
         responseTime: customerMetrics.avgResponseTime
       };
     });
-    
+
     return customerMetrics.sort((a, b) => b.totalCalls - a.totalCalls).slice(0, 10);
   });
 
@@ -74,15 +77,45 @@ export function UsagePage() {
     setFilters(prev => ({ ...prev, [key]: value }));
   };
 
+  const clearFilters = () => {
+    setFilters(getDefaultFilters());
+  };
+
+  const hasActiveFilters = createMemo(() => {
+    const f = filters();
+    const defaultFilters = getDefaultFilters();
+    return f.customerType !== '' ||
+           f.plan !== '' ||
+           f.region !== '' ||
+           f.riskLevel !== '' ||
+           f.startDate !== defaultFilters.startDate ||
+           f.endDate !== defaultFilters.endDate;
+  });
+
   return (
     <div class="space-y-6">
-      <div>
-        <h1 class="text-2xl font-bold text-gray-800">用量分析</h1>
-        <p class="text-gray-500 mt-1">分析和监控平台用量数据</p>
+      <div class="flex items-center justify-between">
+        <div>
+          <h1 class="text-2xl font-bold text-gray-800">用量分析</h1>
+          <p class="text-gray-500 mt-1">分析和监控平台用量数据</p>
+        </div>
+        <div class="text-sm text-gray-500">
+          数据范围: {filters().startDate} ~ {filters().endDate}
+        </div>
       </div>
 
       <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-        <h3 class="text-sm font-medium text-gray-700 mb-4">筛选条件</h3>
+        <div class="flex items-center justify-between mb-4">
+          <h3 class="text-sm font-medium text-gray-700">筛选条件</h3>
+          <Show when={hasActiveFilters()}>
+            <button
+              onClick={clearFilters}
+              class="text-sm text-gray-500 hover:text-gray-700"
+            >
+              清除筛选
+            </button>
+          </Show>
+        </div>
         <div class="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-6 gap-4">
           <div>
             <label class="block text-xs text-gray-500 mb-1">开始日期</label>

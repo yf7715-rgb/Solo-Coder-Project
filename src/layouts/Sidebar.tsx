@@ -8,12 +8,12 @@ export function Sidebar() {
 
   const currentRole = user()?.role;
 
-  const filteredMenuItems = MENU_ITEMS.filter(item => 
+  const filteredMenuItems = MENU_ITEMS.filter(item =>
     currentRole ? item.roles.includes(currentRole) : false
   );
 
   return (
-    <aside class="w-64 bg-slate-800 text-white flex flex-col min-h-screen">
+    <aside class="fixed top-0 left-0 h-screen w-64 bg-slate-800 text-white flex flex-col z-40 shadow-xl">
       <div class="p-4 border-b border-slate-700">
         <div class="flex items-center gap-3">
           <div class="w-10 h-10 bg-blue-600 rounded-lg flex items-center justify-center">
@@ -28,17 +28,17 @@ export function Sidebar() {
         </div>
       </div>
 
-      <nav class="flex-1 p-4 space-y-1">
+      <nav class="flex-1 p-4 space-y-1 overflow-y-auto">
         {filteredMenuItems.map(item => {
-          const isActive = location.pathname === item.path || 
+          const isActive = location.pathname === item.path ||
             (item.path !== '/' && location.pathname.startsWith(item.path));
-          
+
           return (
             <A
               href={item.path}
               class={`flex items-center gap-3 px-4 py-3 rounded-lg transition-colors ${
-                isActive 
-                  ? 'bg-blue-600 text-white' 
+                isActive
+                  ? 'bg-blue-600 text-white'
                   : 'text-slate-300 hover:bg-slate-700 hover:text-white'
               }`}
             >

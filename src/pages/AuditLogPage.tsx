@@ -4,15 +4,30 @@ import { filterAuditLogs, getDateRange } from '../utils';
 import { ROLES, AUDIT_ACTIONS } from '../config/constants';
 import type { AuditAction } from '../types';
 
-export function AuditLogPage() {
+function getDefaultFilters() {
   const dateRange = getDateRange(30);
-  
-  const [filters, setFilters] = createSignal({
+  return {
     actorRole: '',
     action: '',
     startDate: dateRange.start,
     endDate: dateRange.end
+  };
+}
+
+export function AuditLogPage() {
+  const [filters, setFilters] = createSignal(getDefaultFilters());
+
+  const hasActiveFilters = createMemo(() => {
+    const defaultFilters = getDefaultFilters();
+    return filters().actorRole !== '' ||
+           filters().action !== '' ||
+           filters().startDate !== defaultFilters.startDate ||
+           filters().endDate !== defaultFilters.endDate;
   });
+
+  const clearFilters = () => {
+    setFilters(getDefaultFilters());
+  };
 
   const filteredLogs = createMemo(() => {
     return filterAuditLogs(auditLogs(), {
@@ -26,7 +41,7 @@ export function AuditLogPage() {
   const stats = createMemo(() => {
     const all = auditLogs();
     const today = new Date().toISOString().split('T')[0];
-    
+
     return {
       total: all.length,
       today: all.filter(l => l.createdAt === today).length,
@@ -52,20 +67,30 @@ export function AuditLogPage() {
       <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
         <StatCard label="总记录数" value={stats().total} color="blue" />
         <StatCard label="今日操作" value={stats().today} color="green" />
-        <StatCard 
-          label="管理员操作" 
-          value={stats().byRole.admin} 
-          color="purple" 
+        <StatCard
+          label="管理员操作"
+          value={stats().byRole.admin}
+          color="purple"
         />
-        <StatCard 
-          label="运维操作" 
-          value={stats().byRole.ops} 
-          color="yellow" 
+        <StatCard
+          label="运维操作"
+          value={stats().byRole.ops}
+          color="yellow"
         />
       </div>
 
       <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-        <h3 class="text-sm font-medium text-gray-700 mb-4">筛选条件</h3>
+        <div class="flex items-center justify-between mb-4">
+          <h3 class="text-sm font-medium text-gray-700">筛选条件</h3>
+          <Show when={hasActiveFilters()}>
+            <button
+              onClick={clearFilters}
+              class="text-sm text-gray-500 hover:text-gray-700"
+            >
+              清除筛选
+            </button>
+          </Show>
+        </div>
         <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
           <div>
             <label class="block text-xs text-gray-500 mb-1">开始日期</label>
@@ -199,7 +224,7 @@ export function AuditLogPage() {
                 const count = auditLogs().filter(l => l.action === key).length;
                 const total = auditLogs().length;
                 const percentage = total > 0 ? (count / total * 100) : 0;
-                
+
                 return (
                   <div>
                     <div class="flex justify-between text-sm mb-1">
@@ -227,7 +252,7 @@ export function AuditLogPage() {
                 const roleLogs = auditLogs().filter(l => l.actorRole === role);
                 const total = auditLogs().length;
                 const percentage = total > 0 ? (roleLogs.length / total * 100) : 0;
-                
+
                 const actionCounts: Record<string, number> = {};
                 for (const log of roleLogs) {
                   actionCounts[log.action] = (actionCounts[log.action] || 0) + 1;
@@ -235,7 +260,7 @@ export function AuditLogPage() {
                 const topActions = Object.entries(actionCounts)
                   .sort((a, b) => b[1] - a[1])
                   .slice(0, 3);
-                
+
                 return (
                   <div class="p-4 bg-gray-50 rounded-lg">
                     <div class="flex items-center justify-between mb-2">

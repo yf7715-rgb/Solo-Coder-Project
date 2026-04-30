@@ -2,22 +2,34 @@ import { createSignal, createMemo, For, Show } from 'solid-js';
 import { A } from '@solidjs/router';
 import { alerts, setAlerts } from '../data/mockData';
 import { useAuth } from '../contexts/AuthContext';
-import { 
+import {
   filterAlerts, generateAuditRecord, addAuditLog
 } from '../utils';
-import { 
-  ALERT_TYPES, ALERT_SEVERITIES, ALERT_STATUS 
+import {
+  ALERT_TYPES, ALERT_SEVERITIES, ALERT_STATUS
 } from '../config/constants';
 import type { Alert, AlertStatus as AlertStatusType } from '../types';
 
-export function AlertsPage() {
-  const { user, canPerformAction } = useAuth();
-  
-  const [filters, setFilters] = createSignal({
+function getDefaultFilters() {
+  return {
     type: '',
     severity: '',
     status: ''
+  };
+}
+
+export function AlertsPage() {
+  const { user, canPerformAction } = useAuth();
+
+  const [filters, setFilters] = createSignal(getDefaultFilters());
+
+  const hasActiveFilters = createMemo(() => {
+    return filters().type !== '' || filters().severity !== '' || filters().status !== '';
   });
+
+  const clearFilters = () => {
+    setFilters(getDefaultFilters());
+  };
 
   const [selectedAlert, setSelectedAlert] = createSignal<Alert | null>(null);
 
@@ -47,11 +59,11 @@ export function AlertsPage() {
 
   const updateAlertStatus = (alertId: string, newStatus: AlertStatusType) => {
     if (!user()) return;
-    
+
     setAlerts(prev => prev.map(alert => {
       if (alert.id === alertId) {
         const updated = { ...alert, status: newStatus };
-        
+
         if (newStatus === 'acknowledged') {
           updated.acknowledgedBy = user()!.name;
           updated.acknowledgedAt = new Date().toISOString().split('T')[0];
@@ -64,10 +76,10 @@ export function AlertsPage() {
           updated.escalatedBy = user()!.name;
           updated.escalatedAt = new Date().toISOString().split('T')[0];
         }
-        
+
         let action: 'alert_acknowledge' | 'alert_close' | 'alert_escalate';
         let actionLabel: string;
-        
+
         if (newStatus === 'acknowledged') {
           action = 'alert_acknowledge';
           actionLabel = '认领了告警';
@@ -80,7 +92,7 @@ export function AlertsPage() {
         } else {
           return alert;
         }
-        
+
         const auditRecord = generateAuditRecord(
           action,
           { id: user()!.id, name: user()!.name, role: user()!.role },
@@ -88,12 +100,12 @@ export function AlertsPage() {
           { id: alert.id, type: 'alert', name: alert.title }
         );
         addAuditLog(auditRecord);
-        
+
         return updated;
       }
       return alert;
     }));
-    
+
     setSelectedAlert(null);
   };
 
@@ -143,7 +155,17 @@ export function AlertsPage() {
       </div>
 
       <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-        <h3 class="text-sm font-medium text-gray-700 mb-4">筛选条件</h3>
+        <div class="flex items-center justify-between mb-4">
+          <h3 class="text-sm font-medium text-gray-700">筛选条件</h3>
+          <Show when={hasActiveFilters()}>
+            <button
+              onClick={clearFilters}
+              class="text-sm text-gray-500 hover:text-gray-700"
+            >
+              清除筛选
+            </button>
+          </Show>
+        </div>
         <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
           <div>
             <label class="block text-xs text-gray-500 mb-1">告警类型</label>
@@ -204,7 +226,7 @@ export function AlertsPage() {
               <tbody class="divide-y divide-gray-100">
                 <For each={filteredAlerts()}>
                   {(alert) => (
-                    <tr 
+                    <tr
                       class={`hover:bg-gray-50 cursor-pointer ${selectedAlert()?.id === alert.id ? 'bg-blue-50' : ''}`}
                       onClick={() => setSelectedAlert(alert)}
                     >
@@ -218,7 +240,7 @@ export function AlertsPage() {
                         <p class="text-xs text-gray-500 truncate max-w-xs">{alert.description}</p>
                       </td>
                       <td class="py-3 px-4">
-                        <A 
+                        <A
                           href={`/customers/${alert.customerId}`}
                           class="text-sm text-blue-600 hover:text-blue-700"
                           onClick={(e) => e.stopPropagation()}
@@ -276,7 +298,7 @@ export function AlertsPage() {
               <div class="space-y-3">
                 <div class="flex justify-between text-sm">
                   <span class="text-gray-500">客户</span>
-                  <A 
+                  <A
                     href={`/customers/${selectedAlert()!.customerId}`}
                     class="text-blue-600 hover:text-blue-700"
                   >

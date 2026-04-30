@@ -1,20 +1,73 @@
-import { createMemo, For } from 'solid-js';
+import { createSignal, createMemo, For, Show } from 'solid-js';
 import { A } from '@solidjs/router';
 import { customers, usageTrends, alerts, policies } from '../data/mockData';
-import { aggregateMetrics, filterAlerts, formatNumber, formatPercentage, getDateRange } from '../utils';
-import { PLANS, ALERT_STATUS } from '../config/constants';
+import {
+  aggregateMetrics, filterAlerts, filterCustomers, filterUsageTrends,
+  formatNumber, formatPercentage, getDateRange
+} from '../utils';
+import {
+  PLANS, ALERT_STATUS, REGIONS, RISK_LEVELS
+} from '../config/constants';
+
+function getDefaultFilters() {
+  const dateRange = getDateRange(7);
+  return {
+    startDate: dateRange.start,
+    endDate: dateRange.end,
+    plan: '',
+    region: '',
+    riskLevel: ''
+  };
+}
 
 export function DashboardPage() {
-  const dateRange = getDateRange(7);
-  
+  const [filters, setFilters] = createSignal(getDefaultFilters());
+
+  const hasActiveFilters = createMemo(() => {
+    const defaultFilters = getDefaultFilters();
+    return filters().plan !== '' ||
+           filters().region !== '' ||
+           filters().riskLevel !== '' ||
+           filters().startDate !== defaultFilters.startDate ||
+           filters().endDate !== defaultFilters.endDate;
+  });
+
+  const clearFilters = () => {
+    setFilters(getDefaultFilters());
+  };
+
+  const handleFilterChange = (key: string, value: string) => {
+    setFilters(prev => ({ ...prev, [key]: value }));
+  };
+
+  const filteredCustomers = createMemo(() => {
+    return filterCustomers(customers(), {
+      plan: (filters().plan as any) || undefined,
+      region: filters().region || undefined,
+      riskLevel: filters().riskLevel || undefined
+    });
+  });
+
+  const filteredCustomerIds = createMemo(() => {
+    return filteredCustomers().map(c => c.id);
+  });
+
+  const filteredTrends = createMemo(() => {
+    return filterUsageTrends(usageTrends(), {
+      startDate: filters().startDate,
+      endDate: filters().endDate,
+      customerIds: filteredCustomerIds()
+    });
+  });
+
   const stats = createMemo(() => {
-    const allCustomers = customers();
+    const allCustomers = filteredCustomers();
     const activeCustomers = allCustomers.filter(c => c.status === 'active');
-    const recentTrends = usageTrends().filter(t => t.date >= dateRange.start && t.date <= dateRange.end);
+    const recentTrends = filteredTrends();
     const metrics = aggregateMetrics(recentTrends);
     const openAlerts = filterAlerts(alerts(), { status: 'open' });
     const allAlerts = alerts();
-    
+
     return {
       totalCustomers: allCustomers.length,
       activeCustomers: activeCustomers.length,
@@ -28,13 +81,23 @@ export function DashboardPage() {
   });
 
   const topCustomers = createMemo(() => {
-    return [...customers()].sort((a, b) => b.apiCalls - a.apiCalls).slice(0, 5);
+    return [...filteredCustomers()].sort((a, b) => b.apiCalls - a.apiCalls).slice(0, 5);
   });
 
   const recentAlerts = createMemo(() => {
     return [...alerts()]
       .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
       .slice(0, 5);
+  });
+
+  const planDistribution = createMemo(() => {
+    const all = filteredCustomers();
+    return {
+      free: all.filter(c => c.plan === 'free').length,
+      pro: all.filter(c => c.plan === 'pro').length,
+      enterprise: all.filter(c => c.plan === 'enterprise').length,
+      total: all.length
+    };
   });
 
   return (
@@ -45,7 +108,80 @@ export function DashboardPage() {
           <p class="text-gray-500 mt-1">平台用量运营概览</p>
         </div>
         <div class="text-sm text-gray-500">
-          数据范围: {dateRange.start} ~ {dateRange.end}
+          数据范围: {filters().startDate} ~ {filters().endDate}
+        </div>
+      </div>
+
+      <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+        <div class="flex items-center justify-between mb-4">
+          <h3 class="text-sm font-medium text-gray-700">筛选条件</h3>
+          <Show when={hasActiveFilters()}>
+            <button
+              onClick={clearFilters}
+              class="text-sm text-gray-500 hover:text-gray-700"
+            >
+              清除筛选
+            </button>
+          </Show>
+        </div>
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
+          <div>
+            <label class="block text-xs text-gray-500 mb-1">开始日期</label>
+            <input
+              type="date"
+              value={filters().startDate}
+              onInput={(e) => handleFilterChange('startDate', e.target.value)}
+              class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
+            />
+          </div>
+          <div>
+            <label class="block text-xs text-gray-500 mb-1">结束日期</label>
+            <input
+              type="date"
+              value={filters().endDate}
+              onInput={(e) => handleFilterChange('endDate', e.target.value)}
+              class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
+            />
+          </div>
+          <div>
+            <label class="block text-xs text-gray-500 mb-1">套餐</label>
+            <select
+              value={filters().plan}
+              onChange={(e) => handleFilterChange('plan', e.target.value)}
+              class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
+            >
+              <option value="">全部</option>
+              {Object.entries(PLANS).map(([key, val]) => (
+                <option value={key}>{val.label}</option>
+              ))}
+            </select>
+          </div>
+          <div>
+            <label class="block text-xs text-gray-500 mb-1">地区</label>
+            <select
+              value={filters().region}
+              onChange={(e) => handleFilterChange('region', e.target.value)}
+              class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
+            >
+              <option value="">全部</option>
+              {Object.entries(REGIONS).map(([key, val]) => (
+                <option value={key}>{val.label}</option>
+              ))}
+            </select>
+          </div>
+          <div>
+            <label class="block text-xs text-gray-500 mb-1">风险等级</label>
+            <select
+              value={filters().riskLevel}
+              onChange={(e) => handleFilterChange('riskLevel', e.target.value)}
+              class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
+            >
+              <option value="">全部</option>
+              {Object.entries(RISK_LEVELS).map(([key, val]) => (
+                <option value={key}>{val.label}</option>
+              ))}
+            </select>
+          </div>
         </div>
       </div>
 
@@ -60,7 +196,7 @@ export function DashboardPage() {
         <StatCard
           title="API 调用总量"
           value={formatNumber(stats().totalAPICalls)}
-          trend="近 7 天"
+          trend={`${filters().startDate} ~ ${filters().endDate}`}
           icon="api"
           color="green"
         />
@@ -113,6 +249,11 @@ export function DashboardPage() {
                 </A>
               )}
             </For>
+            <Show when={topCustomers().length === 0}>
+              <div class="text-center py-8 text-gray-400">
+                暂无匹配的客户数据
+              </div>
+            </Show>
           </div>
         </div>
 
@@ -157,18 +298,18 @@ export function DashboardPage() {
         <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
           <PlanDistribution
             plan="free"
-            customers={customers().filter(c => c.plan === 'free').length}
-            total={customers().length}
+            customers={planDistribution().free}
+            total={planDistribution().total}
           />
           <PlanDistribution
             plan="pro"
-            customers={customers().filter(c => c.plan === 'pro').length}
-            total={customers().length}
+            customers={planDistribution().pro}
+            total={planDistribution().total}
           />
           <PlanDistribution
             plan="enterprise"
-            customers={customers().filter(c => c.plan === 'enterprise').length}
-            total={customers().length}
+            customers={planDistribution().enterprise}
+            total={planDistribution().total}
           />
         </div>
       </div>
@@ -208,7 +349,7 @@ function StatCard(props: {
 
 function PlanDistribution(props: { plan: 'free' | 'pro' | 'enterprise'; customers: number; total: number }) {
   const percentage = props.total > 0 ? (props.customers / props.total * 100) : 0;
-  
+
   return (
     <div>
       <div class="flex items-center justify-between mb-2">

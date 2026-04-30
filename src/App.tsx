@@ -1,7 +1,7 @@
 import { Router, Route, useNavigate, useLocation } from '@solidjs/router';
-import { createEffect } from 'solid-js';
+import { createEffect, Show, createMemo } from 'solid-js';
 import type { Component } from 'solid-js';
-import { useAuth } from './contexts/AuthContext';
+import { useAuth, AuthProvider } from './contexts/AuthContext';
 import { MainLayout } from './layouts/MainLayout';
 import { LoginPage } from './pages/LoginPage';
 import { DashboardPage } from './pages/DashboardPage';
@@ -11,53 +11,73 @@ import { CustomerDetailPage } from './pages/CustomerDetailPage';
 import { AlertsPage } from './pages/AlertsPage';
 import { PoliciesPage } from './pages/PoliciesPage';
 import { AuditLogPage } from './pages/AuditLogPage';
+import type { Role } from './types';
 
-function ProtectedRoute(Component: Component) {
-  return function ProtectedComponent() {
-    const { isAuthenticated } = useAuth();
-    const navigate = useNavigate();
-    const location = useLocation();
+function ProtectedPage(props: { component: Component; roles: Role[] }) {
+  const { isAuthenticated, user } = useAuth();
+  const navigate = useNavigate();
+  const location = useLocation();
 
-    createEffect(() => {
-      if (!isAuthenticated()) {
-        navigate('/login', { state: { from: location.pathname } });
-      }
-    });
+  const hasAccess = createMemo(() => {
+    if (!isAuthenticated()) return false;
+    const currentUser = user();
+    if (!currentUser) return false;
+    return props.roles.includes(currentUser.role);
+  });
 
-    return <Component />;
-  };
+  createEffect(() => {
+    if (!isAuthenticated()) {
+      navigate('/login', { state: { from: location.pathname }, replace: true });
+    } else if (!hasAccess()) {
+      navigate('/', { replace: true });
+    }
+  });
+
+  return (
+    <Show when={isAuthenticated() && hasAccess()}>
+      <props.component />
+    </Show>
+  );
 }
 
-function LayoutWrapper(Component: Component) {
-  return function LayoutComponent() {
+function PageWithLayout(props: { component: Component; roles: Role[] }) {
+  return function LayoutPage() {
     return (
       <MainLayout>
-        <Component />
+        <ProtectedPage component={props.component} roles={props.roles} />
       </MainLayout>
     );
   };
 }
 
-function NavigateToHome() {
+function NavigateToLogin() {
   const navigate = useNavigate();
   createEffect(() => {
-    navigate('/');
+    navigate('/login', { replace: true });
   });
   return null;
 }
 
-export default function App() {
+function AppContent() {
   return (
     <Router>
       <Route path="/login" component={LoginPage} />
-      <Route path="/" component={LayoutWrapper(ProtectedRoute(DashboardPage))} />
-      <Route path="/usage" component={LayoutWrapper(ProtectedRoute(UsagePage))} />
-      <Route path="/customers" component={LayoutWrapper(ProtectedRoute(CustomersPage))} />
-      <Route path="/customers/:id" component={LayoutWrapper(ProtectedRoute(CustomerDetailPage))} />
-      <Route path="/alerts" component={LayoutWrapper(ProtectedRoute(AlertsPage))} />
-      <Route path="/policies" component={LayoutWrapper(ProtectedRoute(PoliciesPage))} />
-      <Route path="/audit-log" component={LayoutWrapper(ProtectedRoute(AuditLogPage))} />
-      <Route path="*" component={NavigateToHome} />
+      <Route path="/" component={PageWithLayout({ component: DashboardPage, roles: ['admin', 'ops', 'viewer'] })} />
+      <Route path="/usage" component={PageWithLayout({ component: UsagePage, roles: ['admin', 'ops', 'viewer'] })} />
+      <Route path="/customers" component={PageWithLayout({ component: CustomersPage, roles: ['admin', 'ops', 'viewer'] })} />
+      <Route path="/customers/:id" component={PageWithLayout({ component: CustomerDetailPage, roles: ['admin', 'ops', 'viewer'] })} />
+      <Route path="/alerts" component={PageWithLayout({ component: AlertsPage, roles: ['admin', 'ops', 'viewer'] })} />
+      <Route path="/policies" component={PageWithLayout({ component: PoliciesPage, roles: ['admin', 'ops'] })} />
+      <Route path="/audit-log" component={PageWithLayout({ component: AuditLogPage, roles: ['admin', 'ops'] })} />
+      <Route path="*" component={NavigateToLogin} />
     </Router>
+  );
+}
+
+export default function App() {
+  return (
+    <AuthProvider>
+      <AppContent />
+    </AuthProvider>
   );
 }
