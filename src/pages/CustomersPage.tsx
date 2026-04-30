@@ -7,9 +7,11 @@ import {
   generateAuditRecord, addAuditLog
 } from '../utils';
 import { 
-  PLANS, CUSTOMER_STATUS, RISK_LEVELS, REGIONS 
+  PLANS, CUSTOMER_STATUS, RISK_LEVELS, REGIONS, UI_TEXTS
 } from '../config/constants';
 import type { Customer, Plan } from '../types';
+
+const T = UI_TEXTS;
 
 interface FilterView {
   id: string;
@@ -137,34 +139,39 @@ export function CustomersPage() {
     localStorage.setItem('customerFilterViews', JSON.stringify(updatedViews));
   };
 
+  const clearFilters = () => {
+    setFilters({ search: '', plan: '', status: '', region: '', riskLevel: '', type: '' });
+    setPage(1);
+  };
+
   return (
     <div class="space-y-6">
       <div class="flex items-center justify-between">
         <div>
-          <h1 class="text-2xl font-bold text-gray-800">客户管理</h1>
-          <p class="text-gray-500 mt-1">管理和查看所有客户信息</p>
+          <h1 class="text-2xl font-bold text-gray-800">{T.pages.customers.title}</h1>
+          <p class="text-gray-500 mt-1">{T.pages.customers.description}</p>
         </div>
         <Show when={canPerformAction('edit')}>
           <button class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors">
-            导出数据
+            {T.common.exportData}
           </button>
         </Show>
       </div>
 
       <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
         <div class="flex items-center justify-between mb-4">
-          <h3 class="text-sm font-medium text-gray-700">筛选条件</h3>
+          <h3 class="text-sm font-medium text-gray-700">{T.common.filterConditions}</h3>
           <button
             onClick={() => setSavingView(!savingView())}
             class="text-sm text-blue-600 hover:text-blue-700"
           >
-            保存视图
+            {T.common.saveView}
           </button>
         </div>
 
         <Show when={savedViews().length > 0}>
           <div class="mb-4 p-3 bg-gray-50 rounded-lg">
-            <p class="text-xs text-gray-500 mb-2">已保存的视图:</p>
+            <p class="text-xs text-gray-500 mb-2">{T.common.savedViews}</p>
             <div class="flex flex-wrap gap-2">
               <For each={savedViews()}>
                 {(view) => (
@@ -192,7 +199,7 @@ export function CustomersPage() {
           <div class="mb-4 p-3 bg-blue-50 rounded-lg flex items-center gap-3">
             <input
               type="text"
-              placeholder="视图名称"
+              placeholder={T.common.placeholder.viewName}
               value={viewName()}
               onInput={(e) => setViewName(e.target.value)}
               class="flex-1 px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
@@ -201,13 +208,13 @@ export function CustomersPage() {
               onClick={saveCurrentView}
               class="px-4 py-2 bg-blue-600 text-white rounded-lg text-sm hover:bg-blue-700"
             >
-              保存
+              {T.common.save}
             </button>
             <button
               onClick={() => setSavingView(false)}
               class="px-4 py-2 text-gray-600 rounded-lg text-sm hover:bg-gray-100"
             >
-              取消
+              {T.common.cancel}
             </button>
           </div>
         </Show>
@@ -217,14 +224,14 @@ export function CustomersPage() {
             <label class="block text-xs text-gray-500 mb-1">搜索</label>
             <input
               type="text"
-              placeholder="搜索客户名称、邮箱、ID..."
+              placeholder={T.common.placeholder.searchCustomer}
               value={filters().search}
               onInput={(e) => handleFilterChange('search', e.target.value)}
               class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
             />
           </div>
           <div>
-            <label class="block text-xs text-gray-500 mb-1">套餐</label>
+            <label class="block text-xs text-gray-500 mb-1">{T.common.plan}</label>
             <select
               value={filters().plan}
               onChange={(e) => handleFilterChange('plan', e.target.value)}
@@ -250,7 +257,7 @@ export function CustomersPage() {
             </select>
           </div>
           <div>
-            <label class="block text-xs text-gray-500 mb-1">地区</label>
+            <label class="block text-xs text-gray-500 mb-1">{T.common.region}</label>
             <select
               value={filters().region}
               onChange={(e) => handleFilterChange('region', e.target.value)}
@@ -263,7 +270,7 @@ export function CustomersPage() {
             </select>
           </div>
           <div>
-            <label class="block text-xs text-gray-500 mb-1">风险等级</label>
+            <label class="block text-xs text-gray-500 mb-1">{T.common.riskLevel}</label>
             <select
               value={filters().riskLevel}
               onChange={(e) => handleFilterChange('riskLevel', e.target.value)}
@@ -279,13 +286,13 @@ export function CustomersPage() {
 
         <div class="mt-4 flex items-center justify-between">
           <div class="text-sm text-gray-500">
-            共 {paginatedData().total} 条记录
+            {T.pages.customers.stats.totalRecords} {paginatedData().total} {T.pages.customers.stats.records}
           </div>
           <button
-            onClick={() => setFilters({ search: '', plan: '', status: '', region: '', riskLevel: '', type: '' })}
+            onClick={clearFilters}
             class="text-sm text-gray-500 hover:text-gray-700"
           >
-            清除筛选
+            {T.common.clearFilters}
           </button>
         </div>
       </div>
@@ -300,25 +307,25 @@ export function CustomersPage() {
                   onClick={() => handleSort('name')}
                 >
                   <div class="flex items-center gap-1">
-                    客户名称
+                    {T.pages.customers.table.customerName}
                     <SortIndicator column="name" current={sortBy()} order={sortOrder()} />
                   </div>
                 </th>
-                <th class="text-left py-3 px-4 text-xs font-medium text-gray-500 uppercase">套餐</th>
-                <th class="text-left py-3 px-4 text-xs font-medium text-gray-500 uppercase">状态</th>
+                <th class="text-left py-3 px-4 text-xs font-medium text-gray-500 uppercase">{T.pages.customers.table.plan}</th>
+                <th class="text-left py-3 px-4 text-xs font-medium text-gray-500 uppercase">{T.pages.customers.table.status}</th>
                 <th
                   class="text-right py-3 px-4 text-xs font-medium text-gray-500 uppercase cursor-pointer hover:bg-gray-100"
                   onClick={() => handleSort('apiCalls')}
                 >
                   <div class="flex items-center justify-end gap-1">
-                    调用量
+                    {T.pages.customers.table.apiCalls}
                     <SortIndicator column="apiCalls" current={sortBy()} order={sortOrder()} />
                   </div>
                 </th>
-                <th class="text-right py-3 px-4 text-xs font-medium text-gray-500 uppercase">错误率</th>
-                <th class="text-left py-3 px-4 text-xs font-medium text-gray-500 uppercase">风险等级</th>
-                <th class="text-left py-3 px-4 text-xs font-medium text-gray-500 uppercase">地区</th>
-                <th class="text-center py-3 px-4 text-xs font-medium text-gray-500 uppercase">操作</th>
+                <th class="text-right py-3 px-4 text-xs font-medium text-gray-500 uppercase">{T.pages.customers.table.errorRate}</th>
+                <th class="text-left py-3 px-4 text-xs font-medium text-gray-500 uppercase">{T.pages.customers.table.riskLevel}</th>
+                <th class="text-left py-3 px-4 text-xs font-medium text-gray-500 uppercase">{T.pages.customers.table.region}</th>
+                <th class="text-center py-3 px-4 text-xs font-medium text-gray-500 uppercase">{T.pages.customers.table.operations}</th>
               </tr>
             </thead>
             <tbody class="divide-y divide-gray-100">
@@ -368,7 +375,7 @@ export function CustomersPage() {
                         href={`/customers/${customer.id}`}
                         class="text-sm text-blue-600 hover:text-blue-700"
                       >
-                        查看详情
+                        {T.common.viewDetail}
                       </A>
                     </td>
                   </tr>
@@ -381,7 +388,7 @@ export function CustomersPage() {
         <Show when={paginatedData().totalPages > 1}>
           <div class="flex items-center justify-between px-6 py-4 border-t border-gray-200">
             <div class="text-sm text-gray-500">
-              第 {page()} 页，共 {paginatedData().totalPages} 页
+              {T.pages.customers.pagination.page} {page()} {T.pages.customers.pagination.totalPages} {paginatedData().totalPages} {T.pages.customers.pagination.pages}
             </div>
             <div class="flex items-center gap-2">
               <button
@@ -389,7 +396,7 @@ export function CustomersPage() {
                 disabled={page() === 1}
                 class="px-3 py-1 border border-gray-300 rounded text-sm hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                上一页
+                {T.pages.customers.pagination.prev}
               </button>
               <For each={Array.from({ length: Math.min(5, paginatedData().totalPages) }, (_, i) => {
                 const startPage = Math.max(1, Math.min(page() - 2, paginatedData().totalPages - 4));
@@ -413,7 +420,7 @@ export function CustomersPage() {
                 disabled={page() === paginatedData().totalPages}
                 class="px-3 py-1 border border-gray-300 rounded text-sm hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                下一页
+                {T.pages.customers.pagination.next}
               </button>
             </div>
           </div>

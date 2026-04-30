@@ -5,8 +5,10 @@ import {
   formatNumber, formatPercentage, getDateRange
 } from '../utils';
 import {
-  PLANS, RISK_LEVELS, CUSTOMER_TYPES, REGIONS
+  PLANS, RISK_LEVELS, CUSTOMER_TYPES, REGIONS, UI_TEXTS
 } from '../config/constants';
+
+const T = UI_TEXTS;
 
 function getDefaultFilters() {
   const dateRange = getDateRange(30);
@@ -96,29 +98,29 @@ export function UsagePage() {
     <div class="space-y-6">
       <div class="flex items-center justify-between">
         <div>
-          <h1 class="text-2xl font-bold text-gray-800">用量分析</h1>
-          <p class="text-gray-500 mt-1">分析和监控平台用量数据</p>
+          <h1 class="text-2xl font-bold text-gray-800">{T.pages.usage.title}</h1>
+          <p class="text-gray-500 mt-1">{T.pages.usage.description}</p>
         </div>
         <div class="text-sm text-gray-500">
-          数据范围: {filters().startDate} ~ {filters().endDate}
+          {T.pages.dashboard.dataRange}: {filters().startDate} ~ {filters().endDate}
         </div>
       </div>
 
       <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
         <div class="flex items-center justify-between mb-4">
-          <h3 class="text-sm font-medium text-gray-700">筛选条件</h3>
+          <h3 class="text-sm font-medium text-gray-700">{T.common.filterConditions}</h3>
           <Show when={hasActiveFilters()}>
             <button
               onClick={clearFilters}
               class="text-sm text-gray-500 hover:text-gray-700"
             >
-              清除筛选
+              {T.common.clearFilters}
             </button>
           </Show>
         </div>
         <div class="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-6 gap-4">
           <div>
-            <label class="block text-xs text-gray-500 mb-1">开始日期</label>
+            <label class="block text-xs text-gray-500 mb-1">{T.common.startDate}</label>
             <input
               type="date"
               value={filters().startDate}
@@ -127,7 +129,7 @@ export function UsagePage() {
             />
           </div>
           <div>
-            <label class="block text-xs text-gray-500 mb-1">结束日期</label>
+            <label class="block text-xs text-gray-500 mb-1">{T.common.endDate}</label>
             <input
               type="date"
               value={filters().endDate}
@@ -136,7 +138,7 @@ export function UsagePage() {
             />
           </div>
           <div>
-            <label class="block text-xs text-gray-500 mb-1">客户类型</label>
+            <label class="block text-xs text-gray-500 mb-1">{T.common.customerType}</label>
             <select
               value={filters().customerType}
               onChange={(e) => handleFilterChange('customerType', e.target.value)}
@@ -149,7 +151,7 @@ export function UsagePage() {
             </select>
           </div>
           <div>
-            <label class="block text-xs text-gray-500 mb-1">套餐</label>
+            <label class="block text-xs text-gray-500 mb-1">{T.common.plan}</label>
             <select
               value={filters().plan}
               onChange={(e) => handleFilterChange('plan', e.target.value)}
@@ -162,7 +164,7 @@ export function UsagePage() {
             </select>
           </div>
           <div>
-            <label class="block text-xs text-gray-500 mb-1">地区</label>
+            <label class="block text-xs text-gray-500 mb-1">{T.common.region}</label>
             <select
               value={filters().region}
               onChange={(e) => handleFilterChange('region', e.target.value)}
@@ -175,7 +177,7 @@ export function UsagePage() {
             </select>
           </div>
           <div>
-            <label class="block text-xs text-gray-500 mb-1">风险等级</label>
+            <label class="block text-xs text-gray-500 mb-1">{T.common.riskLevel}</label>
             <select
               value={filters().riskLevel}
               onChange={(e) => handleFilterChange('riskLevel', e.target.value)}
@@ -192,25 +194,25 @@ export function UsagePage() {
 
       <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         <MetricCard
-          title="总调用量"
+          title={T.pages.usage.stats.totalCalls}
           value={formatNumber(metrics().totalCalls)}
-          subtitle="筛选范围内"
+          subtitle={T.pages.usage.stats.filterRange}
           icon="calls"
         />
         <MetricCard
-          title="成功调用"
+          title={T.pages.usage.stats.successfulCalls}
           value={formatNumber(metrics().totalSuccessful)}
           subtitle={`占比 ${formatPercentage(metrics().totalCalls > 0 ? (metrics().totalSuccessful / metrics().totalCalls * 100) : 0)}`}
           icon="success"
         />
         <MetricCard
-          title="平均错误率"
+          title={T.pages.usage.stats.avgErrorRate}
           value={formatPercentage(metrics().avgErrorRate)}
-          subtitle={metrics().avgErrorRate > 3 ? '高于阈值' : '正常'}
+          subtitle={metrics().avgErrorRate > 3 ? T.common.aboveThreshold : T.common.normal}
           icon="error"
         />
         <MetricCard
-          title="平均响应时长"
+          title={T.pages.usage.stats.avgResponseTime}
           value={`${metrics().avgResponseTime.toFixed(0)}ms`}
           subtitle={`峰值 ${metrics().peakCalls.toFixed(0)} 次/日`}
           icon="time"
@@ -218,7 +220,7 @@ export function UsagePage() {
       </div>
 
       <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-        <h3 class="text-lg font-semibold text-gray-800 mb-4">套餐用量分布</h3>
+        <h3 class="text-lg font-semibold text-gray-800 mb-4">{T.pages.usage.sections.planDistribution}</h3>
         <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
           <For each={['free', 'pro', 'enterprise'] as const}>
             {(plan) => {
@@ -229,22 +231,22 @@ export function UsagePage() {
                     <span class={`px-3 py-1 rounded-full text-sm ${PLANS[plan].color}`}>
                       {PLANS[plan].label}
                     </span>
-                    <span class="text-sm text-gray-500">{data.customers} 客户</span>
+                    <span class="text-sm text-gray-500">{data.customers} {T.pages.policies.list.customers}</span>
                   </div>
                   <div class="space-y-3">
                     <div class="flex justify-between text-sm">
-                      <span class="text-gray-500">总调用量</span>
+                      <span class="text-gray-500">{T.columns.totalCalls}</span>
                       <span class="font-medium">{formatNumber(data.totalCalls)}</span>
                     </div>
                     <div class="flex justify-between text-sm">
-                      <span class="text-gray-500">平均错误率</span>
+                      <span class="text-gray-500">{T.columns.errorRate}</span>
                       <span class={`font-medium ${data.avgErrorRate > 3 ? 'text-red-600' : 'text-green-600'}`}>
                         {formatPercentage(data.avgErrorRate)}
                       </span>
                     </div>
                     <div>
                       <div class="flex justify-between text-xs text-gray-500 mb-1">
-                        <span>配额使用率</span>
+                        <span>{T.pages.policies.list.usageRate}</span>
                         <span>{Math.min(100, Math.floor(data.totalCalls / (plan === 'free' ? 1000 : plan === 'pro' ? 10000 : 100000) * 100))}%</span>
                       </div>
                       <div class="h-2 bg-gray-100 rounded-full overflow-hidden">
@@ -268,17 +270,17 @@ export function UsagePage() {
       </div>
 
       <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-        <h3 class="text-lg font-semibold text-gray-800 mb-4">用量排行 TOP 10</h3>
+        <h3 class="text-lg font-semibold text-gray-800 mb-4">{T.pages.usage.sections.topCustomers}</h3>
         <div class="overflow-x-auto">
           <table class="w-full">
             <thead>
               <tr class="border-b border-gray-200">
-                <th class="text-left py-3 px-4 text-xs font-medium text-gray-500 uppercase">排名</th>
-                <th class="text-left py-3 px-4 text-xs font-medium text-gray-500 uppercase">客户名称</th>
-                <th class="text-left py-3 px-4 text-xs font-medium text-gray-500 uppercase">套餐</th>
-                <th class="text-right py-3 px-4 text-xs font-medium text-gray-500 uppercase">总调用量</th>
-                <th class="text-right py-3 px-4 text-xs font-medium text-gray-500 uppercase">错误率</th>
-                <th class="text-right py-3 px-4 text-xs font-medium text-gray-500 uppercase">平均响应时长</th>
+                <th class="text-left py-3 px-4 text-xs font-medium text-gray-500 uppercase">{T.columns.rank}</th>
+                <th class="text-left py-3 px-4 text-xs font-medium text-gray-500 uppercase">{T.columns.customerName}</th>
+                <th class="text-left py-3 px-4 text-xs font-medium text-gray-500 uppercase">{T.columns.plan}</th>
+                <th class="text-right py-3 px-4 text-xs font-medium text-gray-500 uppercase">{T.columns.totalCalls}</th>
+                <th class="text-right py-3 px-4 text-xs font-medium text-gray-500 uppercase">{T.columns.errorRate}</th>
+                <th class="text-right py-3 px-4 text-xs font-medium text-gray-500 uppercase">{T.columns.avgResponseTime}</th>
               </tr>
             </thead>
             <tbody class="divide-y divide-gray-100">
@@ -318,17 +320,17 @@ export function UsagePage() {
       </div>
 
       <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-        <h3 class="text-lg font-semibold text-gray-800 mb-4">用量趋势明细</h3>
+        <h3 class="text-lg font-semibold text-gray-800 mb-4">{T.pages.usage.sections.trendDetails}</h3>
         <div class="overflow-x-auto">
           <table class="w-full">
             <thead>
               <tr class="border-b border-gray-200">
-                <th class="text-left py-3 px-4 text-xs font-medium text-gray-500 uppercase">日期</th>
-                <th class="text-right py-3 px-4 text-xs font-medium text-gray-500 uppercase">总调用</th>
-                <th class="text-right py-3 px-4 text-xs font-medium text-gray-500 uppercase">成功</th>
-                <th class="text-right py-3 px-4 text-xs font-medium text-gray-500 uppercase">失败</th>
-                <th class="text-right py-3 px-4 text-xs font-medium text-gray-500 uppercase">错误率</th>
-                <th class="text-right py-3 px-4 text-xs font-medium text-gray-500 uppercase">响应时长</th>
+                <th class="text-left py-3 px-4 text-xs font-medium text-gray-500 uppercase">{T.columns.date}</th>
+                <th class="text-right py-3 px-4 text-xs font-medium text-gray-500 uppercase">{T.columns.total}</th>
+                <th class="text-right py-3 px-4 text-xs font-medium text-gray-500 uppercase">{T.columns.success}</th>
+                <th class="text-right py-3 px-4 text-xs font-medium text-gray-500 uppercase">{T.columns.failed}</th>
+                <th class="text-right py-3 px-4 text-xs font-medium text-gray-500 uppercase">{T.columns.errorRate}</th>
+                <th class="text-right py-3 px-4 text-xs font-medium text-gray-500 uppercase">{T.columns.responseTime}</th>
               </tr>
             </thead>
             <tbody class="divide-y divide-gray-100">
@@ -353,7 +355,7 @@ export function UsagePage() {
         </div>
         <Show when={filteredTrends().length > 20}>
           <p class="text-sm text-gray-500 mt-4 text-center">
-            仅展示前 20 条记录，共 {filteredTrends().length} 条
+            {T.pages.usage.table.showingFirst} {filteredTrends().length} 条
           </p>
         </Show>
       </div>

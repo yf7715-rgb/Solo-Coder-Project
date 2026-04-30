@@ -6,8 +6,10 @@ import {
   formatNumber, formatPercentage, getDateRange
 } from '../utils';
 import {
-  PLANS, ALERT_STATUS, REGIONS, RISK_LEVELS
+  PLANS, ALERT_STATUS, REGIONS, RISK_LEVELS, UI_TEXTS
 } from '../config/constants';
+
+const T = UI_TEXTS;
 
 function getDefaultFilters() {
   const dateRange = getDateRange(7);
@@ -104,29 +106,29 @@ export function DashboardPage() {
     <div class="space-y-6">
       <div class="flex items-center justify-between">
         <div>
-          <h1 class="text-2xl font-bold text-gray-800">总览</h1>
-          <p class="text-gray-500 mt-1">平台用量运营概览</p>
+          <h1 class="text-2xl font-bold text-gray-800">{T.pages.dashboard.title}</h1>
+          <p class="text-gray-500 mt-1">{T.pages.dashboard.description}</p>
         </div>
         <div class="text-sm text-gray-500">
-          数据范围: {filters().startDate} ~ {filters().endDate}
+          {T.pages.dashboard.dataRange}: {filters().startDate} ~ {filters().endDate}
         </div>
       </div>
 
       <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
         <div class="flex items-center justify-between mb-4">
-          <h3 class="text-sm font-medium text-gray-700">筛选条件</h3>
+          <h3 class="text-sm font-medium text-gray-700">{T.common.filterConditions}</h3>
           <Show when={hasActiveFilters()}>
             <button
               onClick={clearFilters}
               class="text-sm text-gray-500 hover:text-gray-700"
             >
-              清除筛选
+              {T.common.clearFilters}
             </button>
           </Show>
         </div>
         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
           <div>
-            <label class="block text-xs text-gray-500 mb-1">开始日期</label>
+            <label class="block text-xs text-gray-500 mb-1">{T.common.startDate}</label>
             <input
               type="date"
               value={filters().startDate}
@@ -135,7 +137,7 @@ export function DashboardPage() {
             />
           </div>
           <div>
-            <label class="block text-xs text-gray-500 mb-1">结束日期</label>
+            <label class="block text-xs text-gray-500 mb-1">{T.common.endDate}</label>
             <input
               type="date"
               value={filters().endDate}
@@ -144,7 +146,7 @@ export function DashboardPage() {
             />
           </div>
           <div>
-            <label class="block text-xs text-gray-500 mb-1">套餐</label>
+            <label class="block text-xs text-gray-500 mb-1">{T.common.plan}</label>
             <select
               value={filters().plan}
               onChange={(e) => handleFilterChange('plan', e.target.value)}
@@ -157,7 +159,7 @@ export function DashboardPage() {
             </select>
           </div>
           <div>
-            <label class="block text-xs text-gray-500 mb-1">地区</label>
+            <label class="block text-xs text-gray-500 mb-1">{T.common.region}</label>
             <select
               value={filters().region}
               onChange={(e) => handleFilterChange('region', e.target.value)}
@@ -170,7 +172,7 @@ export function DashboardPage() {
             </select>
           </div>
           <div>
-            <label class="block text-xs text-gray-500 mb-1">风险等级</label>
+            <label class="block text-xs text-gray-500 mb-1">{T.common.riskLevel}</label>
             <select
               value={filters().riskLevel}
               onChange={(e) => handleFilterChange('riskLevel', e.target.value)}
@@ -187,30 +189,30 @@ export function DashboardPage() {
 
       <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         <StatCard
-          title="总客户数"
+          title={T.pages.dashboard.stats.totalCustomers}
           value={stats().totalCustomers}
-          trend={`${stats().activeCustomers} 活跃`}
+          trend={`${stats().activeCustomers} ${T.common.active}`}
           icon="users"
           color="blue"
         />
         <StatCard
-          title="API 调用总量"
+          title={T.pages.dashboard.stats.totalAPICalls}
           value={formatNumber(stats().totalAPICalls)}
           trend={`${filters().startDate} ~ ${filters().endDate}`}
           icon="api"
           color="green"
         />
         <StatCard
-          title="平均错误率"
+          title={T.pages.dashboard.stats.avgErrorRate}
           value={formatPercentage(stats().avgErrorRate)}
-          trend={stats().avgErrorRate > 3 ? '高于正常水平' : '正常'}
+          trend={stats().avgErrorRate > 3 ? T.common.aboveThreshold : T.common.normal}
           icon="error"
           color={stats().avgErrorRate > 3 ? 'red' : 'green'}
         />
         <StatCard
-          title="待处理告警"
+          title={T.pages.dashboard.stats.pendingAlerts}
           value={stats().openAlerts}
-          trend={`${stats().criticalAlerts} 严重`}
+          trend={`${stats().criticalAlerts} ${RISK_LEVELS.critical.label}`}
           icon="bell"
           color={stats().criticalAlerts > 0 ? 'red' : 'yellow'}
         />
@@ -219,9 +221,9 @@ export function DashboardPage() {
       <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
           <div class="flex items-center justify-between mb-4">
-            <h3 class="text-lg font-semibold text-gray-800">用量 TOP 客户</h3>
+            <h3 class="text-lg font-semibold text-gray-800">{T.pages.dashboard.sections.topCustomers}</h3>
             <A href="/customers" class="text-sm text-blue-600 hover:text-blue-700">
-              查看全部
+              {T.common.viewAll}
             </A>
           </div>
           <div class="space-y-4">
@@ -244,14 +246,14 @@ export function DashboardPage() {
                   </div>
                   <div class="text-right">
                     <p class="font-semibold text-gray-800">{formatNumber(customer.apiCalls)}</p>
-                    <p class="text-xs text-gray-500">次调用</p>
+                    <p class="text-xs text-gray-500">{T.units.calls}</p>
                   </div>
                 </A>
               )}
             </For>
             <Show when={topCustomers().length === 0}>
               <div class="text-center py-8 text-gray-400">
-                暂无匹配的客户数据
+                {T.common.noMatch}
               </div>
             </Show>
           </div>
@@ -259,9 +261,9 @@ export function DashboardPage() {
 
         <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
           <div class="flex items-center justify-between mb-4">
-            <h3 class="text-lg font-semibold text-gray-800">最近告警</h3>
+            <h3 class="text-lg font-semibold text-gray-800">{T.pages.dashboard.sections.recentAlerts}</h3>
             <A href="/alerts" class="text-sm text-blue-600 hover:text-blue-700">
-              查看全部
+              {T.common.viewAll}
             </A>
           </div>
           <div class="space-y-3">
@@ -294,7 +296,7 @@ export function DashboardPage() {
       </div>
 
       <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-        <h3 class="text-lg font-semibold text-gray-800 mb-4">套餐分布概览</h3>
+        <h3 class="text-lg font-semibold text-gray-800 mb-4">{T.pages.dashboard.sections.planDistribution}</h3>
         <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
           <PlanDistribution
             plan="free"
@@ -357,7 +359,7 @@ function PlanDistribution(props: { plan: 'free' | 'pro' | 'enterprise'; customer
           {PLANS[props.plan].label}
         </span>
         <span class="text-sm text-gray-600">
-          {props.customers} 客户 ({percentage.toFixed(1)}%)
+          {props.customers} {T.pages.policies.list.customers} ({percentage.toFixed(1)}%)
         </span>
       </div>
       <div class="h-3 bg-gray-100 rounded-full overflow-hidden">
